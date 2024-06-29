@@ -35,7 +35,7 @@ import {
         <Preview>Here&apos;s your verification code: {otp}</Preview>
         <Section>
           <Row>
-            <Heading as="h2">Hello {username.toUpperCase()},</Heading>
+            <Heading as="h2">Hello {username[0].toUpperCase() + username.slice(1)},</Heading>
           </Row>
           <Row>
             <Text>
