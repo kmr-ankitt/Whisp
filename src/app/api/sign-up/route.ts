@@ -8,6 +8,7 @@ export async function POST(request: Request) {
 
   try {
     const { username, email, password } = await request.json();
+    console.log(`Received data: username=${username}, email=${email}`);
 
     const existingVerifiedUserByUsername = await UserModel.findOne({
       username,
@@ -15,11 +16,11 @@ export async function POST(request: Request) {
     });
 
     if (existingVerifiedUserByUsername) {
-      return Response.json(
-        {
+      return new Response(
+        JSON.stringify({
           success: false,
           message: "Username is already taken",
-        },
+        }),
         { status: 400 }
       );
     }
@@ -29,11 +30,11 @@ export async function POST(request: Request) {
 
     if (existingUserByEmail) {
       if (existingUserByEmail.isVerified) {
-        return Response.json(
-          {
+        return new Response(
+          JSON.stringify({
             success: false,
             message: "User already exists with this email",
-          },
+          }),
           { status: 400 }
         );
       } else {
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
         existingUserByEmail.verifyCode = verifyCode;
         existingUserByEmail.verifyCodeExpiry = new Date(Date.now() + 3600000);
         await existingUserByEmail.save();
+        console.log(`Updated existing user: ${existingUserByEmail}`);
       }
     } else {
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -60,6 +62,7 @@ export async function POST(request: Request) {
       });
 
       await newUser.save();
+      console.log(`New user created: ${newUser}`);
     }
 
     // Send verification email
@@ -69,29 +72,29 @@ export async function POST(request: Request) {
       verifyCode
     );
     if (!emailResponse.success) {
-      return Response.json(
-        {
+      return new Response(
+        JSON.stringify({
           success: false,
           message: emailResponse.message,
-        },
+        }),
         { status: 500 }
       );
     }
 
-    return Response.json(
-      {
+    return new Response(
+      JSON.stringify({
         success: true,
         message: "User registered successfully. Please verify your account.",
-      },
+      }),
       { status: 201 }
     );
   } catch (error) {
     console.error("Error registering user:", error);
-    return Response.json(
-      {
+    return new Response(
+      JSON.stringify({
         success: false,
         message: "Error registering user",
-      },
+      }),
       { status: 500 }
     );
   }
